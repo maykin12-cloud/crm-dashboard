@@ -37,18 +37,33 @@ export default function Login() {
         <input
           className="w-full mb-2 p-2 bg-gray-700"
           placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              document.getElementById("senha").focus();
+            }
+          }}
         />
 
         <input
+          id="senha"
           type="password"
           className="w-full mb-4 p-2 bg-gray-700"
           placeholder="Senha"
+          value={senha}
           onChange={(e) => setSenha(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              login();
+            }
+          }}
         />
 
         <button
-          className="w-full bg-blue-600 p-2 rounded"
+          className="w-full bg-blue-600 p-2 rounded 
+                     active:scale-95 active:translate-y-1 
+                     transition-all duration-100"
           onClick={login}
         >
           Entrar
