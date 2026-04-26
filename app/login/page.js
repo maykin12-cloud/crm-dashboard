@@ -8,12 +8,18 @@ import { useRouter } from "next/navigation";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
   const login = async () => {
-    if (loading) return;
+    setErro("");
+
+    if (!email || !senha) {
+      setErro("Preencha email e senha.");
+      return;
+    }
 
     const auth = getAuth(app);
     setLoading(true);
@@ -23,20 +29,27 @@ export default function Login() {
       router.push("/dashboard");
     } catch (error) {
       console.error(error);
-      alert("Erro ao logar");
+      setErro("Email ou senha incorretos.");
       setLoading(false);
     }
   };
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-900">
-      <div className="bg-gray-800 p-8 rounded-xl text-white w-80">
+      <div className="bg-gray-800 p-8 rounded-xl text-white w-80 shadow-lg">
         <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold">Login</h2>
+          <h2 className="text-3xl font-bold">Login</h2>
+
           <p className="text-gray-400 text-sm mt-1">
             By Maycon Azevedo
           </p>
         </div>
+
+        {erro && (
+          <div className="mb-4 bg-red-500/10 border border-red-500/40 text-red-300 text-sm p-3 rounded-lg">
+            {erro}
+          </div>
+        )}
 
         <input
           className="w-full mb-2 p-2 bg-gray-700 rounded outline-none focus:ring-2 focus:ring-blue-500"
@@ -46,13 +59,13 @@ export default function Login() {
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              document.getElementById("senha")?.focus();
+              document.getElementById("senhaInput")?.focus();
             }
           }}
         />
 
         <input
-          id="senha"
+          id="senhaInput"
           type="password"
           className="w-full mb-4 p-2 bg-gray-700 rounded outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Senha"
@@ -68,14 +81,12 @@ export default function Login() {
 
         <button
           disabled={loading}
+          className={`w-full p-2 rounded transition active:scale-95 ${
+            loading
+              ? "bg-gray-500 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-500"
+          }`}
           onClick={login}
-          className={`w-full p-2 rounded text-white transition-all duration-100
-            ${
-              loading
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-blue-600 active:scale-95 active:translate-y-1 hover:bg-blue-700"
-            }
-          `}
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>

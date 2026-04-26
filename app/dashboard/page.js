@@ -9,6 +9,12 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
+import { useRouter } from "next/navigation";
 import app from "../../lib/firebase";
 import {
   PieChart,
@@ -25,6 +31,7 @@ export default function Dashboard() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
 
+  const router = useRouter();
   const db = getFirestore(app);
 
   const carregarDados = async () => {
@@ -39,8 +46,25 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    carregarDados();
+    const auth = getAuth(app);
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      carregarDados();
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  const sair = async () => {
+    const auth = getAuth(app);
+    await signOut(auth);
+    router.push("/login");
+  };
 
   const formatarData = (data) => {
     if (!data) return "";
@@ -65,9 +89,7 @@ export default function Dashboard() {
 
     const colaboradorOk =
       !filtroColaborador ||
-      item.colaborador
-        ?.toLowerCase()
-        .includes(filtroColaborador.toLowerCase());
+      item.colaborador === filtroColaborador;
 
     return dataOk && colaboradorOk;
   });
@@ -104,7 +126,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#08111f] text-white flex">
-      {/* MENU LATERAL */}
       <aside
         className={`${
           menuAberto ? "w-64" : "w-20"
@@ -137,10 +158,16 @@ export default function Dashboard() {
           >
             {menuAberto ? "➕ Cadastro" : "➕"}
           </Link>
+
+          <button
+            onClick={sair}
+            className="p-3 rounded-lg hover:bg-red-900/30 text-red-300 text-left"
+          >
+            {menuAberto ? "🚪 Sair" : "🚪"}
+          </button>
         </nav>
       </aside>
 
-      {/* CONTEÚDO */}
       <main className="flex-1 p-8">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -151,18 +178,17 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* FILTROS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <select
-  className="p-3 bg-[#101c30] border border-blue-900/40 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-  value={filtroColaborador}
-  onChange={(e) => setFiltroColaborador(e.target.value)}
->
-  <option value="">Todos os colaboradores</option>
-  <option value="JORDANO MONÇÃO">JORDANO MONÇÃO</option>
-  <option value="VIVIANE LIMA">VIVIANE LIMA</option>
-  <option value="RAIANE CARLA">RAIANE CARLA</option>
-</select>
+            className="p-3 bg-[#101c30] border border-blue-900/40 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+            value={filtroColaborador}
+            onChange={(e) => setFiltroColaborador(e.target.value)}
+          >
+            <option value="">Todos os colaboradores</option>
+            <option value="JORDANO MONÇÃO">JORDANO MONÇÃO</option>
+            <option value="VIVIANE LIMA">VIVIANE LIMA</option>
+            <option value="RAIANE CARLA">RAIANE CARLA</option>
+          </select>
 
           <input
             type="date"
@@ -179,7 +205,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-[#101c30] border border-blue-900/40 p-6 rounded-2xl shadow-lg">
             <p className="text-gray-400">Total Lançados</p>
@@ -201,7 +226,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* GRÁFICO */}
         <div className="bg-[#101c30] border border-blue-900/40 p-6 rounded-2xl mb-8">
           <h2 className="text-xl font-bold mb-2">Visão Geral</h2>
           <p className="text-gray-400 mb-6">Distribuição de resultados</p>
@@ -244,7 +268,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* TABELA */}
         <div className="bg-[#101c30] border border-blue-900/40 p-6 rounded-2xl">
           <h2 className="text-xl font-bold mb-4">Registros</h2>
 
